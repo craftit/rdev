@@ -183,7 +183,7 @@ convert_keys!(
     KEY_RIGHTMETA, MetaRight,
     KEY_PRINT, PrintScreen,
     // KpDelete behaves like normal Delete most of the time
-    KEY_DELETE, KpDelete,
+    //KEY_DELETE, KpDelete,
     // Linux doesn't have an IntlBackslash key
     KEY_BACKSLASH, IntlBackslash
 );
@@ -326,6 +326,7 @@ where
             time: SystemTime::now(),
             name,
             event_type,
+            code: 0, // TODO: What should go here?
         };
         if callback(rdev_event).is_some() {
             (Some(event), GrabStatus::Continue)
