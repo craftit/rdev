@@ -301,9 +301,10 @@ fn evdev_event_to_rdev_event(
 //     }
 // }
 
+
 pub fn grab<T>(callback: T) -> Result<(), GrabError>
 where
-    T: Fn(Event) -> Option<Event> + 'static,
+    T: Fn(Event) -> EventAction + 'static,
 {
     let mut kb = Keyboard::new().ok_or(GrabError::KeyboardError)?;
     let display = Display::new().ok_or(GrabError::MissingDisplayError)?;
@@ -328,11 +329,10 @@ where
             event_type,
             code: 0, // TODO: What should go here?
         };
-        if callback(rdev_event).is_some() {
-            (Some(event), GrabStatus::Continue)
-        } else {
-            // callback returns None, swallow the event
-            (None, GrabStatus::Continue)
+        match callback(rdev_event) {
+            EventAction::Accept => (Some(event), GrabStatus::Continue),
+            EventAction::Drop => (None, GrabStatus::Continue),
+            EventAction::Stop => (Some(event), GrabStatus::Stop),
         }
     })?;
     Ok(())

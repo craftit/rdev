@@ -1,10 +1,11 @@
-use crate::rdev::{Event, EventType, GrabError};
+use crate::rdev::{Event, EventType, GrabError, EventAction};
 use crate::windows::common::{convert, set_key_hook, set_mouse_hook, HookError, HOOK, KEYBOARD};
 use std::ptr::null_mut;
 use std::time::SystemTime;
 use winapi::um::winuser::{CallNextHookEx, GetMessageA, HC_ACTION};
+use crate::EventAction;
 
-static mut GLOBAL_CALLBACK: Option<Box<dyn FnMut(Event) -> Option<Event>>> = None;
+static mut GLOBAL_CALLBACK: Option<Box<dyn FnMut(Event) -> EventAction>> = None;
 
 unsafe extern "system" fn raw_callback(code: i32, param: usize, lpdata: isize) -> isize {
     if code == HC_ACTION {
@@ -23,12 +24,19 @@ unsafe extern "system" fn raw_callback(code: i32, param: usize, lpdata: isize) -
                 name,
             };
             if let Some(callback) = &mut GLOBAL_CALLBACK {
-                if callback(event).is_none() {
-                    // https://stackoverflow.com/questions/42756284/blocking-windows-mouse-click-using-setwindowshookex
-                    // https://android.developreference.com/article/14560004/Blocking+windows+mouse+click+using+SetWindowsHookEx()
-                    // https://cboard.cprogramming.com/windows-programming/99678-setwindowshookex-wm_keyboard_ll.html
-                    // let _result = CallNextHookEx(HOOK, code, param, lpdata);
-                    return 1;
+                match callback(event) {
+                    EventAction::Drop => {
+                        // https://stackoverflow.com/questions/42756284/blocking-windows-mouse-click-using-setwindowshookex
+                        // https://android.developreference.com/article/14560004/Blocking+windows+mouse+click+using+SetWindowsHookEx()
+                        // https://cboard.cprogramming.com/windows-programming/99678-setwindowshookex-wm_keyboard_ll.html
+                        // let _result = CallNextHookEx(HOOK, code, param, lpdata);
+                        return 1;
+                    }
+                    EventAction::Stop => {
+                        // TODO: How to stop handling
+                    }
+                    EventAction::Accept => {
+                    }
                 }
             }
         }
@@ -46,7 +54,7 @@ impl From<HookError> for GrabError {
 
 pub fn grab<T>(callback: T) -> Result<(), GrabError>
 where
-    T: FnMut(Event) -> Option<Event> + 'static,
+    T: FnMut(Event) -> EventAction + 'static,
 {
     unsafe {
         GLOBAL_CALLBACK = Some(Box::new(callback));

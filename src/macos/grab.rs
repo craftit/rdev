@@ -5,8 +5,9 @@ use cocoa::base::nil;
 use cocoa::foundation::NSAutoreleasePool;
 use core_graphics::event::{CGEventTapLocation, CGEventType};
 use std::os::raw::c_void;
+use crate::EventAction;
 
-static mut GLOBAL_CALLBACK: Option<Box<dyn FnMut(Event) -> Option<Event>>> = None;
+static mut GLOBAL_CALLBACK: Option<Box<dyn FnMut(Event) -> EventAction>> = None;
 
 unsafe extern "C" fn raw_callback(
     _proxy: CGEventTapProxy,
@@ -20,8 +21,15 @@ unsafe extern "C" fn raw_callback(
     if let Ok(mut keyboard) = opt {
         if let Some(event) = convert(_type, &cg_event, &mut keyboard) {
             if let Some(callback) = &mut GLOBAL_CALLBACK {
-                if callback(event).is_none() {
-                    cg_event.set_type(CGEventType::Null);
+                match callback(event) {
+                    EventAction::Drop => {
+                        cg_event.set_type(CGEventType::Null);
+                    }
+                    EventAction::Stop => {
+                        // TODO:...
+                    }
+                    EventAction::Accept => {
+                    }
                 }
             }
         }
@@ -32,7 +40,7 @@ unsafe extern "C" fn raw_callback(
 #[link(name = "Cocoa", kind = "framework")]
 pub fn grab<T>(callback: T) -> Result<(), GrabError>
 where
-    T: FnMut(Event) -> Option<Event> + 'static,
+    T: FnMut(Event) -> EventAction + 'static,
 {
     unsafe {
         GLOBAL_CALLBACK = Some(Box::new(callback));

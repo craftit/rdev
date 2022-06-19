@@ -171,22 +171,23 @@
 //! which hooks into the global input device event stream.
 //! by suppling this function with a callback, you can intercept
 //! all keyboard and mouse events before they are delivered to applications / window managers.
-//! In the callback, returning None ignores the event and returning the event let's it pass.
-//! There is no modification of the event possible here (yet).
+//! In the callback, returning EventAction::Drop ignores the event and returning EventAction::Accept let's it pass.
+//! There is no modification of the event possible here.
 //!
 //! Note: the use of the word `unstable` here refers specifically to the fact that the `grab` API is unstable and subject to change
 //!
 //! ```no_run
 //! #[cfg(feature = "unstable_grab")]
 //! use rdev::{grab, Event, EventType, Key};
+//! use rdev::EventAction;
 //!
 //! #[cfg(feature = "unstable_grab")]
-//! let callback = |event: Event| -> Option<Event> {
+//! let callback = |event: Event| -> EventAction {
 //!     if let EventType::KeyPress(Key::CapsLock) = event.event_type {
 //!         println!("Consuming and cancelling CapsLock");
-//!         None  // CapsLock is now effectively disabled
+//!         EventAction::Drop  // CapsLock is now effectively disabled
 //!     }
-//!     else { Some(event) }
+//!     else { EventAction::Accept }
 //! };
 //! // This will block.
 //! #[cfg(feature = "unstable_grab")]
@@ -321,6 +322,13 @@ pub fn display_size() -> Result<(u64, u64), DisplayError> {
     _display_size()
 }
 
+// Action to take when an event is received
+pub enum EventAction {
+    Accept, // Allow the event to be processed
+    Drop,  // Drop the event
+    Stop   // Stop the event loop
+}
+
 #[cfg(feature = "unstable_grab")]
 #[cfg(target_os = "linux")]
 pub use crate::linux::grab as _grab;
@@ -342,11 +350,12 @@ pub use crate::windows::grab as _grab;
 /// ```no_run
 /// use rdev::{grab, Event, EventType, Key};
 ///
-/// fn callback(event: Event) -> Option<Event> {
+/// fn callback(event: Event) -> rdev::EventAction {
+///     use rdev::EventAction;
 ///     println!("My callback {:?}", event);
 ///     match event.event_type{
-///         EventType::KeyPress(Key::Tab) => None,
-///         _ => Some(event),
+///         EventType::KeyPress(Key::Tab) => rdev::EventAction::Drop,
+///         _ => rdev::EventAction::Accept,
 ///     }
 /// }
 /// fn main(){
@@ -359,7 +368,7 @@ pub use crate::windows::grab as _grab;
 #[cfg(any(feature = "unstable_grab"))]
 pub fn grab<T>(callback: T) -> Result<(), GrabError>
 where
-    T: Fn(Event) -> Option<Event> + 'static,
+    T: Fn(Event) -> EventAction + 'static,
 {
     _grab(callback)
 }
