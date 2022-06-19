@@ -10,6 +10,7 @@ use inotify::{Inotify, WatchMask};
 use std::ffi::{OsStr, OsString};
 use std::fs::{read_dir, File};
 use std::io;
+
 use std::os::unix::{
     ffi::OsStrExt,
     fs::FileTypeExt,
@@ -17,6 +18,7 @@ use std::os::unix::{
 };
 use std::path::Path;
 use std::time::SystemTime;
+use crate::EventAction;
 
 // TODO The x, y coordinates are currently wrong !! Is there mouse acceleration
 // to take into account ??
