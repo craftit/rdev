@@ -1,5 +1,5 @@
 use lazy_static::lazy_static;
-use rdev::{grab, listen, simulate, Event, EventType, Key};
+use rdev::{grab, listen, simulate, Event, EventType, Key, EventAction};
 use serial_test::serial;
 use std::error::Error;
 use std::sync::mpsc::{channel, Receiver, RecvTimeoutError, Sender};
@@ -23,11 +23,11 @@ fn send_event(event: Event) {
         .expect("Receiving end of EVENT_CHANNEL was closed");
 }
 
-fn grab_tab(event: Event) -> Option<Event> {
+fn grab_tab(event: Event) -> EventAction {
     match event.event_type {
-        EventType::KeyPress(Key::Tab) => None,
-        EventType::KeyRelease(Key::Tab) => None,
-        _ => Some(event),
+        EventType::KeyPress(Key::Tab) => EventAction::Drop,
+        EventType::KeyRelease(Key::Tab) => EventAction::Drop,
+        _ => EventAction::Accept,
     }
 }
 
