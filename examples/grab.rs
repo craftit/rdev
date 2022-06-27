@@ -1,4 +1,4 @@
-use rdev::{grab, Event, EventType, Key};
+use rdev::{grab, Event, EventType, Key, EventAction};
 
 fn main() {
     // This will block.
@@ -7,13 +7,13 @@ fn main() {
     }
 }
 
-fn callback(event: Event) -> Option<Event> {
+fn callback(event: Event) -> EventAction {
     println!("My callback {:?}", event);
     match event.event_type {
         EventType::KeyPress(Key::Tab) => {
             println!("Cancelling tab !");
-            None
+            EventAction::Drop
         }
-        _ => Some(event),
+        _ => EventAction::Accept
     }
 }

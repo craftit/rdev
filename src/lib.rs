@@ -368,7 +368,7 @@ pub use crate::windows::grab as _grab;
 #[cfg(any(feature = "unstable_grab"))]
 pub fn grab<T>(callback: T) -> Result<(), GrabError>
 where
-    T: Fn(Event) -> EventAction + 'static,
+    T: FnMut(Event) -> EventAction + 'static,
 {
     _grab(callback)
 }
