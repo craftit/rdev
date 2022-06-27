@@ -270,7 +270,7 @@ pub enum EventType {
 
 /// When events arrive from the OS they get some additional information added from
 /// EventType, which is the time when this event was received, and the name Option
-/// which contains what characters should be emmitted from that event. This relies
+/// which contains what characters should be emitted from that event. This relies
 /// on the OS layout and keyboard state machinery.
 /// Caveat: Dead keys don't function on Linux(X11) yet. You will receive None for
 /// a dead key, and the raw letter instead of accentuated letter.

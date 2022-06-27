@@ -34,9 +34,10 @@ impl State {
     }
 
     fn value(&self) -> c_uint {
-        // ignore all modiferes for name
-        (self.raw as c_uint) & !0xFF
-        /*
+        // ignore all modifier for name
+
+        /*(self.raw as c_uint) & !0xFF
+        */
         let mut res: c_uint = 0;
         if self.alt {
             res += xlib::Mod1Mask;
@@ -54,7 +55,6 @@ impl State {
             res += xlib::ShiftMask;
         }
         res
-        */
     }
 }
 
