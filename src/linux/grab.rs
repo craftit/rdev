@@ -304,9 +304,9 @@ fn evdev_event_to_rdev_event(
 // }
 
 
-pub fn grab<T>(callback: T) -> Result<(), GrabError>
+pub fn grab<T>(mut callback: T) -> Result<(), GrabError>
 where
-    T: Fn(Event) -> EventAction + 'static,
+    T: FnMut(Event) -> EventAction + 'static,
 {
     let mut kb = Keyboard::new().ok_or(GrabError::KeyboardError)?;
     let display = Display::new().ok_or(GrabError::MissingDisplayError)?;
